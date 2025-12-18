@@ -13,6 +13,24 @@
       <Pack>true</Pack>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <PackagePath>runtimes/linux-arm64/native/</PackagePath>
+      <Link>libcamera-shim.so.0.3.2</Link>
     </Content>
+    <Content Include="runtimes/linux-x64/native/libcamera-shim.so.0.3.2">
+      <Pack>true</Pack>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <PackagePath>runtimes/linux-x64/native/</PackagePath>
+      <Link>libcamera-shim.so.0.3.2</Link>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="runtimes/linux-arm64/native/libcamera-shim.so.0.3.2">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <TargetPath>libcamera-shim.so.0.3.2</TargetPath>
+    </None>
+    <None Include="runtimes/linux-x64/native/libcamera-shim.so.0.3.2">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <TargetPath>libcamera-shim.so.0.3.2</TargetPath>
+    </None>
   </ItemGroup>
 </Project>

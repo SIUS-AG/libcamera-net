@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.15)
 
 project(
     camera-shim
@@ -7,9 +7,9 @@ project(
     HOMEPAGE_URL "https://github.com/buldo/libcamera-net"
     LANGUAGES CXX
 )
-set(BUILD_SHARED_LIBS ON)
-#option(BUILD_SHARED_LIBS "Build shared libs." ON)
-add_library(camera-shim)
+
+# Explicitly build a shared library
+add_library(camera-shim SHARED)
 add_library(camera-shim::camera-shim ALIAS camera-shim)
 
 #----------------------------------------------------------------------------------------------------------------------
@@ -28,7 +28,6 @@ target_link_libraries(camera-shim ${LIBCAMERA_LINK_LIBRARIES})
 #----------------------------------------------------------------------------------------------------------------------
 # end dependencies
 #----------------------------------------------------------------------------------------------------------------------
-
 
 #----------------------------------------------------------------------------------------------------------------------
 # sources
@@ -62,24 +61,35 @@ set(sources
     "source/pixel_format.cpp"
     "source/request.cpp"
     "source/stream.cpp"
-    )
+)
 
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${sources})
-
 target_sources(camera-shim PRIVATE ${sources})
 #----------------------------------------------------------------------------------------------------------------------
 # sources end
 #----------------------------------------------------------------------------------------------------------------------
 
+#----------------------------------------------------------------------------------------------------------------------
+# library properties / versioning
+#----------------------------------------------------------------------------------------------------------------------
 set_target_properties(
     camera-shim PROPERTIES
-# lets say this is OK
-#    CXX_VISIBILITY_PRESET hidden
-#    VISIBILITY_INLINES_HIDDEN YES
     VERSION "${PROJECT_VERSION}"
     SOVERSION "${PROJECT_VERSION_MAJOR}"
-    EXPORT_NAME camera-shim
     OUTPUT_NAME camera-shim
 )
 
 target_compile_features(camera-shim PUBLIC cxx_std_17)
+
+#----------------------------------------------------------------------------------------------------------------------
+# installation
+#----------------------------------------------------------------------------------------------------------------------
+include(GNUInstallDirs)
+
+install(
+    TARGETS camera-shim
+    EXPORT camera-shim-targets
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)

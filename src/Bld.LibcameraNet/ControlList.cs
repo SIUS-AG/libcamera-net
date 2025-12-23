@@ -22,8 +22,21 @@ public class ControlList<TId> where TId : struct, Enum
     {
         var definitionsList = new ControlListInternal<TId>(_listPtr);
         _controls = definitionsList
-            .Select(ControlValueFactory<TId>.Create)
-            .ToDictionary(value => value.Id);
+            .Select(def =>
+            {
+                try
+                {
+                    return ControlValueFactory<TId>.Create(def);
+                }
+                catch (ArgumentOutOfRangeException)
+                {
+                    // Skip controls with unsupported types
+                    Console.WriteLine($"Warning: Skipping control with unsupported type: {def.Type}");
+                    return null;
+                }
+            })
+            .Where(value => value != null)
+            .ToDictionary(value => value!.Id);
     }
 
     public ControlValue<TId>? Get(TId id)

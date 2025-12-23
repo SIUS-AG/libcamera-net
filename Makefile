@@ -1,8 +1,9 @@
-.PHONY: help build build-x64 build-arm64 build-arm32 build-all pack pack-x64 pack-arm64 pack-arm32 pack-all clean run-remote analyze-arm32
+.PHONY: help build build-x64 build-arm64 build-arm32 build-all pack pack-x64 pack-arm64 pack-arm32 pack-all clean run-remote run-jpeg-remote analyze-arm32
 
 # Configuration
 PROJECT := Bld.LibcameraNet/Bld.LibcameraNet.csproj
 EXAMPLE_PROJECT := examples/Bld.LibcameraNet.Example/Bld.LibcameraNet.Example.csproj
+JPEG_PROJECT := examples/Bld.LibcameraNet.JpegCapture/Bld.LibcameraNet.JpegCapture.csproj
 ARM32_SDK_ENV := /opt/poky/5.0.14/environment-setup-cortexa7t2hf-neon-vfpv4-poky-linux-gnueabi
 ARM32_TOOLCHAIN := toolchain-yocto-arm32.cmake
 ARM32_GENERATOR := Ninja
@@ -34,6 +35,7 @@ help:
 	@echo ""
 	@echo "  run-remote    - Build ARM32 example and run on remote device"
 	@echo "                  Set REMOTE_HOST env var"
+	@echo "  run-jpeg-remote - Build ARM32 JPEG capture and run on remote device"
 	@echo "  analyze-arm32 - Analyze ARM32 native library dependencies"
 	@echo ""
 	@echo ""
@@ -135,6 +137,26 @@ run-remote: build-arm32
 	@echo ""
 	@echo "Running example on remote device..."
 	ssh $(REMOTE_USER)@$(REMOTE_HOST) "cd $(REMOTE_DIR) && ./Bld.LibcameraNet.Example"
+
+run-jpeg-remote: build-arm32
+	@echo "Building ARM32 JPEG capture..."
+	@rm -rf src/Bld.LibcameraNet/runtimes/linux-x64 src/Bld.LibcameraNet/runtimes/linux-arm64
+	cd src && dotnet publish $(JPEG_PROJECT) -c Release -r linux-arm --self-contained -o ../build/arm32-jpeg
+	@echo ""
+	@echo "Copying to remote device $(REMOTE_USER)@$(REMOTE_HOST)..."
+	scp -r build/arm32-jpeg $(REMOTE_USER)@$(REMOTE_HOST):$(REMOTE_DIR)
+	@if [ -d "bin/arm32-example" ]; then \
+		echo "Copying additional files from bin/arm32-example..."; \
+		scp -r bin/arm32-example/* $(REMOTE_USER)@$(REMOTE_HOST):$(REMOTE_DIR)/arm32-jpeg/; \
+	fi
+	@echo ""
+	@echo "Running JPEG capture on remote device..."
+	ssh $(REMOTE_USER)@$(REMOTE_HOST) "cd $(REMOTE_DIR)/arm32-jpeg && ./Bld.LibcameraNet.JpegCapture capture.jpg"
+	@echo ""
+	@echo "Copying captured image back..."
+	@mkdir -p data/example/arm32-jpeg
+	scp $(REMOTE_USER)@$(REMOTE_HOST):$(REMOTE_DIR)/arm32-jpeg/capture.jpg data/example/arm32-jpeg/capture.jpg
+	@echo "Image saved to: data/example/arm32-jpeg/capture.jpg"
 
 analyze-arm32: build-arm32
 	@echo "=========================================="

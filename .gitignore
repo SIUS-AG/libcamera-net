@@ -6,7 +6,8 @@
 src/libcamera-shim/build_arm32
 src/libcamera-shim/build_x64
 src/Bld.LibcameraNet/runtimes
-build
+/build/
+/data/
 
 # User-specific files
 *.rsuser

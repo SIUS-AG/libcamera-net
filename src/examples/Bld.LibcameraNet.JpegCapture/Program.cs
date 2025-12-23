@@ -1,6 +1,4 @@
-﻿using System.Reflection;
-using System.Runtime.InteropServices;
-using Bld.LibcameraNet.Controls;
+﻿using Bld.LibcameraNet.Controls;
 using Bld.LibcameraNet.Interop;
 using Bld.LibcameraNet.Interop.Libcamera;
 
@@ -14,9 +12,6 @@ internal class Program
 {
     static async Task Main(string[] args)
     {
-        // Only when LibcameraNet referenced as project
-        NativeLibrary.SetDllImportResolver(typeof(CameraManager).Assembly, DllImportResolver);
-
         var filename = args.Length == 1? args[0] : DateTime.Now.Ticks + ".jpg";
 
         using var mgr = new CameraManager();
@@ -28,8 +23,7 @@ internal class Program
             throw new Exception("No cameras found");
         }
         var cam = cameras[0];
-        var cameraModel = (StringControlValue<PropertyId>)cam.Properties.Get(PropertyId.MODEL);
-        Console.WriteLine($"Using camera: {cameraModel.Value}");
+        Console.WriteLine($"Using camera 0");
 
         cam.Acquire();
 
@@ -126,7 +120,8 @@ internal class Program
         var planes = framebuffer.GetData();
         // Yes, linux XRGB8888 is ImageSharp Rgba32
         var image = Image.LoadPixelData<Rgba32>(planes, (int)size.Width, (int)size.Height);
-        image.Save("img.jpg", new JpegEncoder());
+        image.Save(filename, new JpegEncoder());
+        Console.WriteLine($"Image saved to: {filename}");
     }
 
     private static void PrintDebugInformation(LibcameraStream stream)
@@ -138,16 +133,5 @@ internal class Program
         Console.WriteLine($"PixelFormat {configuration.PixelFormat.GetName()}");
         Console.WriteLine($"Height*Width {configuration.Size.Height}*{configuration.Size.Width}");
         Console.WriteLine("*************************************");
-    }
-
-    private static IntPtr DllImportResolver(string libraryName, Assembly assembly, DllImportSearchPath? searchPath)
-    {
-        if (libraryName.StartsWith("libcamera"))
-        {
-            return NativeLibrary.Load($"runtimes/linux-arm64/native/{LibcameraConsts.LibName}");
-        }
-
-        // Otherwise, fallback to default import resolver.
-        return IntPtr.Zero;
     }
 }

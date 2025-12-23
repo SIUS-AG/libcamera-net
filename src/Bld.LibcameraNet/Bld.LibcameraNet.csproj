@@ -9,28 +9,106 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="runtimes/linux-arm64/native/libcamera-shim.so.0.3.2">
+    <Content Include="runtimes/linux-arm64/native/libcamera-shim.so.0.3.2" Condition="Exists('runtimes/linux-arm64/native/libcamera-shim.so.0.3.2')">
       <Pack>true</Pack>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <PackagePath>runtimes/linux-arm64/native/</PackagePath>
       <Link>libcamera-shim.so.0.3.2</Link>
     </Content>
-    <Content Include="runtimes/linux-x64/native/libcamera-shim.so.0.3.2">
+    <Content Include="runtimes/linux-x64/native/libcamera-shim.so.0.3.2" Condition="Exists('runtimes/linux-x64/native/libcamera-shim.so.0.3.2')">
       <Pack>true</Pack>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <PackagePath>runtimes/linux-x64/native/</PackagePath>
       <Link>libcamera-shim.so.0.3.2</Link>
     </Content>
+    <Content Include="runtimes/linux-arm/native/libcamera-shim.so.0.3.2" Condition="Exists('runtimes/linux-arm/native/libcamera-shim.so.0.3.2')">
+      <Pack>true</Pack>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <PackagePath>runtimes/linux-arm/native/</PackagePath>
+      <Link>libcamera-shim.so.0.3.2</Link>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="runtimes/linux-arm64/native/libcamera-shim.so.0.3.2">
+    <None Include="runtimes/linux-arm64/native/libcamera-shim.so.0.3.2" Condition="Exists('runtimes/linux-arm64/native/libcamera-shim.so.0.3.2')">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <TargetPath>libcamera-shim.so.0.3.2</TargetPath>
     </None>
-    <None Include="runtimes/linux-x64/native/libcamera-shim.so.0.3.2">
+    <None Include="runtimes/linux-x64/native/libcamera-shim.so.0.3.2" Condition="Exists('runtimes/linux-x64/native/libcamera-shim.so.0.3.2')">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <TargetPath>libcamera-shim.so.0.3.2</TargetPath>
+    </None>
+    <None Include="runtimes/linux-arm/native/libcamera-shim.so.0.3.2" Condition="Exists('runtimes/linux-arm/native/libcamera-shim.so.0.3.2')">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <TargetPath>libcamera-shim.so.0.3.2</TargetPath>
     </None>
   </ItemGroup>
+
+  <!-- Build native dependencies before the .NET build -->
+  <!-- 
+    Properties you can override:
+    - NativeTargetRuntimeId: Target runtime (linux-x64, linux-arm64, linux-arm)
+    - NativeCrossToolchain: Path to CMake toolchain file
+    - NativeSdkEnv: Path to SDK environment setup script (for Yocto)
+    - NativeBuildGenerator: CMake generator (default: Unix Makefiles, or Ninja)
+    
+    Example for ARM32 cross-compile from x64:
+    dotnet build /p:NativeTargetRuntimeId=linux-arm /p:NativeSdkEnv="/opt/poky/5.0.14/environment-setup-cortexa7t2hf-neon-vfpv4-poky-linux-gnueabi" /p:NativeCrossToolchain="toolchain-yocto-arm32.cmake"
+  -->
+  <Target Name="BuildNativeDependencies" BeforeTargets="BeforeBuild">
+    <PropertyGroup>
+      <ShimSourceDir>$(MSBuildThisFileDirectory)../libcamera-shim</ShimSourceDir>
+      <RuntimesDir>$(MSBuildThisFileDirectory)runtimes</RuntimesDir>
+      <NativeBuildGenerator Condition="'$(NativeBuildGenerator)' == ''">Unix Makefiles</NativeBuildGenerator>
+    </PropertyGroup>
+
+    <!-- Detect native architecture if not specified -->
+    <Exec Command="uname -m" ConsoleToMSBuild="true" Condition="'$(NativeTargetRuntimeId)' == ''">
+      <Output TaskParameter="ConsoleOutput" PropertyName="Arch" />
+    </Exec>
+
+    <PropertyGroup Condition="'$(NativeTargetRuntimeId)' == ''">
+      <NativeTargetRuntimeId Condition="'$(Arch)' == 'x86_64'">linux-x64</NativeTargetRuntimeId>
+      <NativeTargetRuntimeId Condition="'$(Arch)' == 'aarch64'">linux-arm64</NativeTargetRuntimeId>
+      <NativeTargetRuntimeId Condition="'$(Arch)' == 'armv7l'">linux-arm</NativeTargetRuntimeId>
+    </PropertyGroup>
+
+    <!-- Set build directory based on target -->
+    <PropertyGroup>
+      <ShimBuildDir Condition="'$(NativeTargetRuntimeId)' == 'linux-x64'">$(ShimSourceDir)/build_x64</ShimBuildDir>
+      <ShimBuildDir Condition="'$(NativeTargetRuntimeId)' == 'linux-arm64'">$(ShimSourceDir)/build_release</ShimBuildDir>
+      <ShimBuildDir Condition="'$(NativeTargetRuntimeId)' == 'linux-arm'">$(ShimSourceDir)/build_arm32</ShimBuildDir>
+    </PropertyGroup>
+
+    <Message Importance="high" Text="Building native library for $(NativeTargetRuntimeId)..." />
+    <Message Importance="high" Text="Build directory: $(ShimBuildDir)" />
+
+    <!-- Create runtimes directory structure -->
+    <MakeDir Directories="$(RuntimesDir)/$(NativeTargetRuntimeId)/native" />
+
+    <!-- Prepare CMake command with optional toolchain -->
+    <PropertyGroup>
+      <CMakeConfigureCmd>cmake -S . -B $(ShimBuildDir) -DCMAKE_BUILD_TYPE=Release -G "$(NativeBuildGenerator)"</CMakeConfigureCmd>
+      <CMakeConfigureCmd Condition="'$(NativeCrossToolchain)' != ''">$(CMakeConfigureCmd) -DCMAKE_TOOLCHAIN_FILE=$(NativeCrossToolchain)</CMakeConfigureCmd>
+    </PropertyGroup>
+
+    <!-- Build the native library with optional SDK environment -->
+    <PropertyGroup>
+      <BuildCommand Condition="'$(NativeSdkEnv)' != ''">bash -c "source $(NativeSdkEnv) &amp;&amp; $(CMakeConfigureCmd) &amp;&amp; cmake --build $(ShimBuildDir) -j$$(nproc)"</BuildCommand>
+      <BuildCommand Condition="'$(NativeSdkEnv)' == ''">bash -c "$(CMakeConfigureCmd) &amp;&amp; cmake --build $(ShimBuildDir)"</BuildCommand>
+    </PropertyGroup>
+
+    <Message Importance="high" Text="Build command: $(BuildCommand)" Condition="'$(NativeSdkEnv)' != ''" />
+
+    <Exec Command="$(BuildCommand)" 
+          WorkingDirectory="$(ShimSourceDir)" 
+          Condition="!Exists('$(ShimBuildDir)/libcamera-shim.so.0.3.2')" />
+
+    <!-- Copy the built library to the correct runtime directory -->
+    <Copy SourceFiles="$(ShimBuildDir)/libcamera-shim.so.0.3.2"
+          DestinationFolder="$(RuntimesDir)/$(NativeTargetRuntimeId)/native"
+          SkipUnchangedFiles="true" />
+
+    <Message Importance="high" Text="Native library copied to $(RuntimesDir)/$(NativeTargetRuntimeId)/native" />
+  </Target>
 </Project>

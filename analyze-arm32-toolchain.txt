@@ -1,0 +1,34 @@
+==========================================
+Analyzing ARM32 native library dependencies
+==========================================
+
+Native library location:
+
+Library information:
+src/Bld.LibcameraNet/runtimes/linux-arm/native/libcamera-shim.so.0.3.2: ELF 32-bit LSB shared object, ARM, EABI5 version 1 (GNU/Linux), dynamically linked, BuildID[sha1]=e6d83a8c592a68b441ce19f59266fc5db55dc4ac, with debug_info, not stripped
+
+Required shared libraries (from build host):
+ 0x00000001 (NEEDED)                     Shared library: [libcamera.so.0.4]
+ 0x00000001 (NEEDED)                     Shared library: [libcamera-base.so.0.4]
+ 0x00000001 (NEEDED)                     Shared library: [libstdc++.so.6]
+ 0x00000001 (NEEDED)                     Shared library: [libgcc_s.so.1]
+ 0x00000001 (NEEDED)                     Shared library: [libc.so.6]
+ 0x00000001 (NEEDED)                     Shared library: [ld-linux-armhf.so.3]
+
+Symbol table summary:
+  Exported functions: 129
+  Undefined symbols: 87
+
+Checking dependencies on remote device ...
+Copying library to remote device for analysis...
+
+Running dependency check on remote device:
+  ldd not available on remote device
+  Checking if required libraries exist:
+  ✓ libcamera.so.0.4 found
+  ✓ libcamera-base.so.0.4 found
+  ✓ libstdc++.so.6 found
+  ✓ libgcc_s.so.1 found
+  ✓ libc.so.6 found
+
+==========================================

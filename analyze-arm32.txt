@@ -1,0 +1,28 @@
+Library information:
+bin/arm32-example/libcamera-shim.so.0.3.2: ELF 32-bit LSB shared object, ARM, EABI5 version 1 (GNU/Linux), dynamically linked, BuildID[sha1]=7747db6aff432f3722361be8353d61c9e21c0626, with debug_info, not stripped
+
+Required shared libraries (from build host):
+ 0x00000001 (NEEDED)                     Shared library: [libcamera.so.0.4]
+ 0x00000001 (NEEDED)                     Shared library: [libcamera-base.so.0.4]
+ 0x00000001 (NEEDED)                     Shared library: [libstdc++.so.6]
+ 0x00000001 (NEEDED)                     Shared library: [libgcc_s.so.1]
+ 0x00000001 (NEEDED)                     Shared library: [libc.so.6]
+ 0x00000001 (NEEDED)                     Shared library: [ld-linux-armhf.so.3]
+
+Symbol table summary:
+  Exported functions: 114
+  Undefined symbols: 87
+
+Checking dependencies on remote device:
+Copying library to remote device for analysis...
+
+Running dependency check on remote device:
+  ldd not available on remote device
+  Checking if required libraries exist:
+  ✓ libcamera.so.0.4 found
+  ✓ libcamera-base.so.0.4 found
+  ✓ libstdc++.so.6 found
+  ✓ libgcc_s.so.1 found
+  ✓ libc.so.6 found
+
+==========================================

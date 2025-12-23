@@ -3,6 +3,12 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+src/libcamera-shim/build_arm32
+src/libcamera-shim/build_x64
+src/Bld.LibcameraNet/runtimes
+/build/
+/data/
+
 # User-specific files
 *.rsuser
 *.suo
@@ -10,11 +16,13 @@
 *.userosscache
 *.sln.docstates
 
+
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 
 # Mono auto generated files
 mono_crash.*
+
 
 # Build results
 [Dd]ebug/
@@ -361,3 +369,4 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+.env
